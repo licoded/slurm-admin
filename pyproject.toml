@@ -1,0 +1,15 @@
+[project]
+name = "slm"
+version = "0.1.0"
+description = "Slurm Lifecycle Monitor - Monitor and notify Slurm job status"
+requires-python = ">=3.8"
+dependencies = [
+    "requests>=2.28.0",
+]
+
+[project.scripts]
+slm = "slm.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
