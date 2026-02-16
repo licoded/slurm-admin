@@ -172,6 +172,8 @@ python process.py
 #!/bin/bash
 #SBATCH -J my_script
 #SBATCH -c 4
+#SBATCH -o %j.out    # Use relative path for shared filesystem access
+#SBATCH -e %j.err
 
 uv run /path/to/slurm-admin/src/slurm_admin/slm.py run -- bash <<'EOF'
 python process.py
@@ -220,9 +222,89 @@ EOF
 
 3. **Singleton Pattern**: Database connection uses singleton (`_db_instance`) to avoid multiple connections
 
-2. **Exit Codes**: SLM preserves the original command's exit code for COMPLETED/FAILED status
+4. **Exit Codes**: SLM preserves the original command's exit code for COMPLETED/FAILED status
 
-3. **Signal Handler Logic**: Prevents duplicate logging of the same signal type using `signal_received["signal"]` check
+5. **Signal Handler Logic**: Prevents duplicate logging of the same signal type using `signal_received["signal"]` check
+
+6. **Database Tables**: Auto-created on first use via `ensure_tables()` method
+
+7. **CLI Entry Point**: Defined in `pyproject.toml` as `[project.scripts]` section: `slm = "slurm_admin.slm:main"`
+
+## Slurm Output Files and Logging
+
+### Important: Compute Node Filesystem Isolation
+
+**Problem**: Compute nodes have isolated `/tmp` directories. Files written to `/tmp` on compute nodes are **not accessible** from the login node.
+
+### Recommended: Use Shared Directory for Output Files
+
+**❌ Avoid** (logs inaccessible from login node):
+```bash
+#SBATCH -o /tmp/job_%j.out
+#SBATCH -e /tmp/job_%j.err
+```
+
+**✅ Recommended** (logs in shared filesystem):
+```bash
+#SBATCH -o %j.out          # Saves to current directory (shared)
+#SBATCH -e %j.err
+```
+
+**✅ Also good** (explicit shared path):
+```bash
+#SBATCH -o /path/to/shared/logs/%j.out
+#SBATCH -e /path/to/shared/logs/%j.err
+```
+
+### Viewing Job Logs and Status
+
+**Method 1: Query Database** (Recommended - always accessible)
+```bash
+# Query specific job
+cat > /tmp/query_job.py << 'EOF'
+import sys
+sys.path.insert(0, 'src')
+from slurm_admin.database import get_database, close_database
+
+db = get_database()
+with db.connection.cursor() as cursor:
+    # Get job info
+    cursor.execute("SELECT * FROM slurm_jobs WHERE job_id = %s", ('slurm-12345',))
+    job = cursor.fetchone()
+    if job:
+        print(f"Status: {job['status']}")
+        print(f"Exit Code: {job['exit_code']}")
+        print(f"Submitted: {job['submitted_at']}")
+        print(f"Completed: {job['completed_at']}")
+
+    # Get events
+    cursor.execute("SELECT * FROM slurm_events WHERE job_id = %s ORDER BY created_at", ('slurm-12345',))
+    print("\nEvents:")
+    for event in cursor.fetchall():
+        print(f"  {event['created_at']} | {event['event_status']}: {event['details']}")
+
+close_database()
+EOF
+
+uv run python /tmp/query_job.py
+```
+
+**Method 2: Access Compute Node Files** (if using /tmp)
+```bash
+# Find which compute node ran the job
+sacct -j 12345 --format=JobID,NodeList | tail -1 | awk '{print $2}'
+
+# Read file from compute node
+srun --nodelist=<node_name> cat /tmp/job_12345.err
+```
+
+### Best Practices
+
+1. **Always use relative paths or shared directories** for Slurm output files
+2. **Check database first** for job history - it's always accessible
+3. **Database preserves all events** even if compute node files are purged
+4. **Query database** to get complete lifecycle events:
+   - SUBMITTED, RUNNING, PAUSED, RESUMED, TERMINATING, COMPLETED, FAILED
 
 4. **Database Tables**: Auto-created on first use via `ensure_tables()` method
 
