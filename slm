@@ -1,0 +1,13 @@
+#!/public/home/jwli/python3/bin/python3
+"""SLM Command Line Interface Wrapper"""
+import sys
+import os
+
+# Set PYTHONPATH
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(script_dir, 'src'))
+
+from slurm_admin.slm import main
+
+if __name__ == "__main__":
+    main()

@@ -37,28 +37,43 @@ The project follows a **two-layer decoupled design**:
 
 ### Installation
 ```bash
-# Recommended: Using uv package manager
-uv sync
+# Install dependencies
+python3.9 -m pip install -r requirements.txt
 
-# Alternative: Using pip
+# Or using pip
 pip install -r requirements.txt
 ```
 
-### Important: Always Use `uv run` for Python Commands
-
-**CRITICAL:** All Python commands in this project MUST be executed using `uv run`. This ensures the correct virtual environment and dependencies are used.
-
+### Testing
 ```bash
-# ✅ CORRECT - Use uv run for all Python commands
-uv run python -m py_compile src/slurm_admin/slm.py
-uv run python script.py
-uv run slm submit job.sh
-uv run slm run -- echo "test"
+# Run local test suite (no Slurm cluster required)
+./tests/test_slm.sh
 
-# ❌ WRONG - Never use python or python3 directly
-python script.py          # Wrong! Uses system Python
-python3 script.py         # Wrong! Uses system Python
-python -m pytest          # Wrong! Uses system Python
+# Test basic functionality
+./slm run -- echo "Hello, Slurm!"
+
+# Test signal handling (manual - requires second terminal)
+./slm run -- bash -c 'echo "Starting..."; sleep 30; echo "Done"'
+# Then in another terminal: kill -TSTP <pid>, kill -CONT <pid>, kill -TERM <pid>
+```
+
+### Usage Examples
+```bash
+# Submit job with notification
+./slm submit job_script.sh
+
+# Run command with monitoring
+./slm run -- python script.py
+
+# Run bash script with monitoring
+./slm run -- bash script.sh
+
+# Run inline bash with monitoring
+./slm run -- bash <<'EOF'
+set -e
+python step1.py
+python step2.py
+EOF
 ```
 
 ### Testing
