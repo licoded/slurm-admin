@@ -44,6 +44,23 @@ uv sync
 pip install -r requirements.txt
 ```
 
+### Important: Always Use `uv run` for Python Commands
+
+**CRITICAL:** All Python commands in this project MUST be executed using `uv run`. This ensures the correct virtual environment and dependencies are used.
+
+```bash
+# ✅ CORRECT - Use uv run for all Python commands
+uv run python -m py_compile src/slurm_admin/slm.py
+uv run python script.py
+uv run slm submit job.sh
+uv run slm run -- echo "test"
+
+# ❌ WRONG - Never use python or python3 directly
+python script.py          # Wrong! Uses system Python
+python3 script.py         # Wrong! Uses system Python
+python -m pytest          # Wrong! Uses system Python
+```
+
 ### Testing
 ```bash
 # Run local test suite (no Slurm cluster required)
