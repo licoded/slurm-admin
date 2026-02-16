@@ -22,11 +22,11 @@ class DatabaseConfig:
     """Database configuration from environment variables"""
 
     def __init__(self):
-        self.host = os.getenv("SLM_DB_HOST", "your_mysql_host")
-        self.port = int(os.getenv("SLM_DB_PORT", "3306"))
-        self.user = os.getenv("SLM_DB_USER", "slurm_admin_rw")
-        self.password = os.getenv("SLM_DB_PASSWORD", "your_secure_password")
-        self.database = os.getenv("SLM_DB_NAME", "slurm_admin")
+        self.host = os.getenv("SLM_DB_HOST")
+        self.port = int(os.getenv("SLM_DB_PORT", "3306")) if os.getenv("SLM_DB_PORT") else 3306
+        self.user = os.getenv("SLM_DB_USER")
+        self.password = os.getenv("SLM_DB_PASSWORD")
+        self.database = os.getenv("SLM_DB_NAME")
         self.charset = "utf8mb4"
 
     def to_dict(self) -> Dict[str, Any]:
