@@ -24,6 +24,15 @@ except ImportError:
         get_database = None
         close_database = None
 
+try:
+    from .http_client import get_http_client
+except ImportError:
+    try:
+        from http_client import get_http_client
+    except ImportError:
+        print("[SLM] Warning: 'http_client' module not found. HTTP logging will be disabled.", file=sys.stderr)
+        get_http_client = None
+
 
 class SlmSDK:
     """Slurm Lifecycle Monitor SDK"""
@@ -37,20 +46,40 @@ class SlmSDK:
         self.job_mem = os.getenv('SLURM_MEM_PER_NODE', 'N/A')
         self.job_partition = os.getenv('SLURM_JOB_PARTITION', 'N/A')
 
-        # Initialize database
-        self.db = get_database() if (db_enabled and get_database) else None
-        if self.db:
-            print(f"[SLM.DB] Database logging enabled", file=sys.stderr)
+        # Determine execution environment
+        self.is_compute_node = bool(os.getenv('SLURM_JOB_ID'))
+
+        # Initialize: Use database on login node, HTTP client on compute node
+        if self.is_compute_node:
+            # Compute node: Use HTTP client
+            self.db = None
+            self.http = get_http_client() if get_http_client else None
+            if self.http:
+                print(f"[SLM] Compute node detected: Using HTTP API for logging", file=sys.stderr)
+            else:
+                print(f"[SLM] Compute node: HTTP client unavailable, logging disabled", file=sys.stderr)
+        else:
+            # Login node: Use database directly
+            self.db = get_database() if (db_enabled and get_database) else None
+            self.http = None
+            if self.db:
+                print(f"[SLM.DB] Login node: Database logging enabled", file=sys.stderr)
+            else:
+                print(f"[SLM] Login node: Database unavailable", file=sys.stderr)
 
     def _log_event(self, event_type: str, event_status: str, details: str = "", metadata: Optional[Dict] = None):
-        """Log event to database"""
+        """Log event to database or via HTTP API"""
         if self.db:
             self.db.log_event(self.job_id, event_type, event_status, details, metadata)
+        elif self.http:
+            self.http.log_event(self.job_id, event_type, event_status, details, metadata)
 
     def _update_job_status(self, status: str, **kwargs):
-        """Update job status in database"""
+        """Update job status in database or via HTTP API"""
         if self.db:
             return self.db.update_job_status(self.job_id, status, **kwargs)
+        elif self.http:
+            return self.http.update_job_status(self.job_id, status, **kwargs)
         return False
 
     def log_status(self, status: str, details: str = ""):
@@ -60,19 +89,22 @@ class SlmSDK:
         print(f"[SLM] {status}: {details}", file=sys.stderr)
 
     def register_job(self, script_path: str = None, command: str = None, submission_source: str = None):
-        """Register job in database"""
+        """Register job in database or via HTTP API"""
+        job_data = {
+            'script_path': script_path,
+            'command': command,
+            'nodes': self.job_nodes,
+            'cpus': self.job_cpus,
+            'gpus': self.job_gpus,
+            'memory': self.job_mem,
+            'partition_name': self.job_partition,
+            'status': 'SUBMITTED'
+        }
+
         if self.db:
-            job_data = {
-                'script_path': script_path,
-                'command': command,
-                'nodes': self.job_nodes,
-                'cpus': self.job_cpus,
-                'gpus': self.job_gpus,
-                'memory': self.job_mem,
-                'partition_name': self.job_partition,
-                'status': 'SUBMITTED'
-            }
             self.db.register_job(self.job_id, self.job_name, submission_source=submission_source, **job_data)
+        elif self.http:
+            self.http.register_job(self.job_id, self.job_name, submission_source=submission_source, **job_data)
 
     def monitor_run(self, cmd_args: List[str]):
         """Core monitoring logic: wrap and execute the actual command"""

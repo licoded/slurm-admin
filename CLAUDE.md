@@ -95,6 +95,23 @@ EOF
 
 ## Configuration
 
+### HTTP API Service (Required for Compute Nodes)
+
+Since compute nodes cannot directly access the database, you must run the HTTP API service on the login node:
+
+```bash
+# Start API service (default port: 9008)
+uv run slm-api --host 0.0.0.0 --port 9008
+
+# Or use a different port
+uv run slm-api --host 0.0.0.0 --port 8000
+
+# Set custom API URL (if different from default)
+export SLM_API_URL="http://10.11.100.251:9008"
+```
+
+**Note**: The API service must be running before submitting jobs. Compute nodes will automatically use HTTP API to send status updates.
+
 ### Environment Variables
 
 ```bash
@@ -190,7 +207,18 @@ EOF
 
 ## Important Implementation Details
 
-1. **Singleton Pattern**: Database connection uses singleton (`_db_instance`) to avoid multiple connections
+1. **Dual-Mode Architecture**: SLM automatically detects execution environment:
+   - **Login node**: Direct database connection for `slm submit`
+   - **Compute node**: HTTP client to send updates to API service on login node
+   - Detection: Checks for `SLURM_JOB_ID` environment variable
+
+2. **HTTP API Communication**:
+   - API service runs on login node (default: `http://10.11.100.251:9008`)
+   - Compute nodes send status updates via HTTP POST
+   - All HTTP requests include detailed success/failure logging
+   - Graceful fallback if API service is unavailable
+
+3. **Singleton Pattern**: Database connection uses singleton (`_db_instance`) to avoid multiple connections
 
 2. **Exit Codes**: SLM preserves the original command's exit code for COMPLETED/FAILED status
 
