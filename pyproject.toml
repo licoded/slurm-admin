@@ -1,0 +1,17 @@
+[project]
+name = "slurm-admin"
+version = "0.1.0"
+description = "Slurm Lifecycle Monitor - A low-coupling monitoring solution for Slurm jobs"
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "requests>=2.31.0",
+    "urllib3<2.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/slurm-admin"
+Repository = "https://github.com/yourusername/slurm-admin"

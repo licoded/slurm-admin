@@ -64,3 +64,15 @@ Thumbs.db
 # Project specific
 tmp/
 *.local
+
+# Slurm logs
+logs/*.out
+logs/*.err
+!logs/.gitkeep
+
+# Output data
+output/*
+!output/.gitkeep
+
+# Webhook configuration (may contain sensitive URLs)
+.env.local
