@@ -50,7 +50,8 @@ class SlmSDK:
     def _update_job_status(self, status: str, **kwargs):
         """Update job status in database"""
         if self.db:
-            self.db.update_job_status(self.job_id, status, **kwargs)
+            return self.db.update_job_status(self.job_id, status, **kwargs)
+        return False
 
     def log_status(self, status: str, details: str = ""):
         """Log status to database"""
