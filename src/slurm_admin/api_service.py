@@ -58,7 +58,7 @@ async def update_job_status(request: Request):
 
         # Extract optional fields
         kwargs = {}
-        for key in ["exit_code", "command", "script_path"]:
+        for key in ["exit_code", "command", "script_path", "nodes", "cpus", "gpus", "memory", "partition_name"]:
             if key in data and data[key] is not None:
                 kwargs[key] = data[key]
 

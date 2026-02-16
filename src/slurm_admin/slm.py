@@ -122,14 +122,42 @@ class SlmSDK:
             # Scenario 1 & 2: Slurm environment
             self.job_id = f"slurm-{slurm_job_id}"
 
+            # Update resource fields from actual Slurm environment
+            self.job_nodes = os.getenv('SLURM_JOB_NODELIST', 'N/A')
+            self.job_cpus = os.getenv('SLURM_CPUS_PER_TASK', os.getenv('SLURM_CPUS_ON_NODE', 'N/A'))
+            self.job_gpus = os.getenv('SLURM_JOB_GRES', 'N/A')
+            # Try multiple memory-related env vars
+            self.job_mem = os.getenv('SLURM_MEM_PER_NODE') or os.getenv('SLURM_MEM_PER_CPU', 'N/A')
+            if self.job_mem != 'N/A' and os.getenv('SLURM_MEM_PER_CPU'):
+                # If we have per-CPU memory, calculate total memory
+                cpus = int(self.job_cpus) if self.job_cpus != 'N/A' else 1
+                try:
+                    self.job_mem = f"{int(self.job_mem) * cpus}MB"
+                except:
+                    pass
+            self.job_partition = os.getenv('SLURM_JOB_PARTITION', 'N/A')
+
             # Try to update existing record (Scenario 1: user used slm submit)
-            updated = self._update_job_status("RUNNING", command=cmd_str)
+            updated = self._update_job_status("RUNNING",
+                                               command=cmd_str,
+                                               nodes=self.job_nodes,
+                                               cpus=self.job_cpus,
+                                               gpus=self.job_gpus,
+                                               memory=self.job_mem,
+                                               partition_name=self.job_partition)
 
             if not updated:
                 # Scenario 2: No record found (user used sbatch directly)
                 print("[SLM] No submission record found, creating new entry (direct_sbatch)", file=sys.stderr)
                 self.register_job(command=cmd_str, submission_source='direct_sbatch')
-                self._update_job_status("RUNNING", command=cmd_str)
+                # Update with resource fields
+                self._update_job_status("RUNNING",
+                                       command=cmd_str,
+                                       nodes=self.job_nodes,
+                                       cpus=self.job_cpus,
+                                       gpus=self.job_gpus,
+                                       memory=self.job_mem,
+                                       partition_name=self.job_partition)
             # else: Scenario 1: Record found and updated
         else:
             # Scenario 3: Local test environment
