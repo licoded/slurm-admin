@@ -172,8 +172,8 @@ python process.py
 #!/bin/bash
 #SBATCH -J my_script
 #SBATCH -c 4
-#SBATCH -o %j.out    # Use relative path for shared filesystem access
-#SBATCH -e %j.err
+#SBATCH -o logs/%j.out    # Use dedicated logs/ directory
+#SBATCH -e logs/%j.err
 
 uv run /path/to/slurm-admin/src/slurm_admin/slm.py run -- bash <<'EOF'
 python process.py
@@ -244,17 +244,13 @@ EOF
 #SBATCH -e /tmp/job_%j.err
 ```
 
-**✅ Recommended** (logs in shared filesystem):
+**✅ Recommended** (logs in shared filesystem with dedicated directory):
 ```bash
-#SBATCH -o %j.out          # Saves to current directory (shared)
-#SBATCH -e %j.err
+#SBATCH -o logs/%j.out     # Saves to logs/ directory (shared)
+#SBATCH -e logs/%j.err
 ```
 
-**✅ Also good** (explicit shared path):
-```bash
-#SBATCH -o /path/to/shared/logs/%j.out
-#SBATCH -e /path/to/shared/logs/%j.err
-```
+**Note**: Slurm will create the `logs/` directory automatically if it doesn't exist.
 
 ### Viewing Job Logs and Status
 
@@ -300,12 +296,18 @@ srun --nodelist=<node_name> cat /tmp/job_12345.err
 
 ### Best Practices
 
-1. **Always use relative paths or shared directories** for Slurm output files
-2. **Check database first** for job history - it's always accessible
+1. **Use `logs/` directory for Slurm output files**:
+   ```bash
+   #SBATCH -o logs/%j.out
+   #SBATCH -e logs/%j.err
+   ```
+   - Keeps workspace clean
+   - All logs in one place for easy management
+   - Still accessible from login node
+
+2. **Check database first** for job history - it's always accessible from login node
+
 3. **Database preserves all events** even if compute node files are purged
+
 4. **Query database** to get complete lifecycle events:
    - SUBMITTED, RUNNING, PAUSED, RESUMED, TERMINATING, COMPLETED, FAILED
-
-4. **Database Tables**: Auto-created on first use via `ensure_tables()` method
-
-5. **CLI Entry Point**: Defined in `pyproject.toml` as `[project.scripts]` section: `slm = "slurm_admin.slm:main"`
