@@ -242,16 +242,16 @@ def main():
         epilog="""
 Examples:
   # Submit a job script
-  uv run slm submit job_script.sh
+  ./slm submit job_script.sh
 
   # Run a command with monitoring
-  uv run slm run -- python train.py --epochs 100
+  ./slm run -- /public/home/jwli/python3/bin/python3 train.py --epochs 100
 
   # Query job information
-  uv run slm query
+  ./slm query
 
   # Disable database logging
-  uv run slm --no-db run -- python script.py
+  ./slm --no-db run -- /public/home/jwli/python3/bin/python3 script.py
 
 Environment Variables:
   SLM_DB_HOST       Database host (default: licoded.site)

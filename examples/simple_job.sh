@@ -12,7 +12,7 @@ echo "Starting simple test job..."
 echo "Job ID: $SLURM_JOB_ID"
 
 # Wrap your command with slm run
-uv run slm run -- python3 -c "
+/public/home/jwli/workSpace/yongkang26/26Feb-labs/slurm-admin/slm run -- /public/home/jwli/python3/bin/python3 -c "
 import time
 import sys
 

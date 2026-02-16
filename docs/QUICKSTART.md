@@ -4,7 +4,7 @@
 
 ### Install dependencies
 ```bash
-uv sync
+/public/home/jwli/python3/bin/python3 -m pip install pymysql fastapi uvicorn
 ```
 
 ### Configure webhook
@@ -21,10 +21,10 @@ source ~/.bashrc
 
 ```bash
 # Test basic command
-uv run slm run -- echo "Test successful!"
+./slm run -- echo "Test successful!"
 
 # Test with Python
-uv run slm run -- python -c "print('Python test!')"
+./slm run -- /public/home/jwli/python3/bin/python3 -c "print('Python test!')"
 ```
 
 ## 3. Create your first monitored job
@@ -44,7 +44,7 @@ echo "Starting job..."
 echo "Job ID: $SLURM_JOB_ID"
 
 # Wrap your command with slm run
-uv run /path/to/slurm-admin/src/slurm_admin/slm.py run -- python -c "
+/public/home/jwli/workSpace/yongkang26/26Feb-labs/slurm-admin/slm run -- /public/home/jwli/python3/bin/python3 -c "
 import time
 print('Processing...')
 time.sleep(10)
@@ -63,7 +63,7 @@ chmod +x my_first_job.sh
 sbatch my_first_job.sh
 
 # Option 2: Use slm submit (with SUBMITTED notification)
-uv run /path/to/slurm-admin/src/slurm_admin/slm.py submit my_first_job.sh
+./slm submit my_first_job.sh
 ```
 
 ### Step 3: Monitor the job
@@ -87,7 +87,7 @@ cat > long_job.sh <<'EOF'
 #SBATCH -c 1
 #SBATCH --time=01:00:00
 
-uv run /path/to/slurm-admin/src/slurm_admin/slm.py run -- bash -c '
+/public/home/jwli/workSpace/yongkang26/26Feb-labs/slurm-admin/slm run -- bash -c '
 echo "Starting long job..."
 for i in {1..60}; do
     echo "Step $i/60"
@@ -137,7 +137,7 @@ python process.py
 #SBATCH -c 4
 
 # Add this wrapper
-uv run /path/to/slurm-admin/src/slurm_admin/slm.py run -- bash <<'EOF'
+/public/home/jwli/workSpace/yongkang26/26Feb-labs/slurm-admin/slm run -- bash <<'EOF'
 
 # Your existing logic (unchanged)
 python process.py
@@ -161,7 +161,7 @@ That's it! Your script now has full lifecycle monitoring.
 source ~/.bashrc
 conda activate myenv
 
-uv run /path/to/slurm-admin/src/slurm_admin/slm.py run -- python train.py --epochs 100
+/public/home/jwli/workSpace/yongkang26/26Feb-labs/slurm-admin/slm run -- /public/home/jwli/python3/bin/python3 train.py --epochs 100
 ```
 
 ### Pattern 2: Data processing pipeline
@@ -170,7 +170,7 @@ uv run /path/to/slurm-admin/src/slurm_admin/slm.py run -- python train.py --epoc
 #SBATCH -J process_data
 #SBATCH -c 8
 
-uv run /path/to/slurm-admin/src/slurm_admin/slm.py run -- bash <<'EOF'
+/public/home/jwli/workSpace/yongkang26/26Feb-labs/slurm-admin/slm run -- bash <<'EOF'
 set -e  # Exit on error
 
 python download.py
@@ -188,7 +188,7 @@ EOF
 #SBATCH --gres=gpu:1
 #SBATCH --array=0-99
 
-uv run /path/to/slurm-admin/src/slurm_admin/slm.py run -- python inference.py \
+/public/home/jwli/workSpace/yongkang26/26Feb-labs/slurm-admin/slm run -- /public/home/jwli/python3/bin/python3 inference.py \
     --input batch_$SLURM_ARRAY_TASK_ID \
     --output result_$SLURM_ARRAY_TASK_ID
 ```
@@ -227,16 +227,16 @@ curl -X POST $SLM_WEBHOOK -H "Content-Type: application/json" \
 
 ```bash
 # Submit job with notification
-uv run slm submit script.sh
+./slm submit script.sh
 
 # Run command with monitoring
-uv run slm run -- python script.py
+./slm run -- /public/home/jwli/python3/bin/python3 script.py
 
 # Run bash script with monitoring
-uv run slm run -- bash script.sh
+./slm run -- bash script.sh
 
 # Run inline bash with monitoring
-uv run slm run -- bash <<'EOF'
+./slm run -- bash <<'EOF'
 # Your commands here
 EOF
 

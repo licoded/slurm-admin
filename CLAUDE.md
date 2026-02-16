@@ -35,13 +35,32 @@ The project follows a **two-layer decoupled design**:
 
 ## Development Commands
 
+### IMPORTANT: Always Use Absolute Paths for Python
+
+**CRITICAL**: All Python commands MUST use the absolute path `/public/home/jwli/python3/bin/python3`. This ensures consistent behavior across login nodes and compute nodes.
+
+```bash
+# ✅ CORRECT - Use absolute path
+./slm run -- /public/home/jwli/python3/bin/python3 script.py
+
+# ❌ WRONG - Never use relative paths
+./slm run -- python script.py
+./slm run -- python3 script.py
+```
+
+This requirement applies to:
+- All shell commands executing Python scripts
+- All inline Python code with `python -c`
+- All pip install commands
+- All Slurm job scripts
+
 ### Installation
 ```bash
 # Install dependencies
-python3.9 -m pip install -r requirements.txt
+/public/home/jwli/python3/bin/python3 -m pip install -r requirements.txt
 
-# Or using pip
-pip install -r requirements.txt
+# Or install individual packages
+/public/home/jwli/python3/bin/python3 -m pip install pymysql fastapi uvicorn
 ```
 
 ### Testing
@@ -63,7 +82,7 @@ pip install -r requirements.txt
 ./slm submit job_script.sh
 
 # Run command with monitoring
-./slm run -- python script.py
+./slm run -- /public/home/jwli/python3/bin/python3 script.py
 
 # Run bash script with monitoring
 ./slm run -- bash script.sh
@@ -71,40 +90,8 @@ pip install -r requirements.txt
 # Run inline bash with monitoring
 ./slm run -- bash <<'EOF'
 set -e
-python step1.py
-python step2.py
-EOF
-```
-
-### Testing
-```bash
-# Run local test suite (no Slurm cluster required)
-./tests/test_slm.sh
-
-# Test basic functionality
-uv run slm run -- echo "Hello, Slurm!"
-
-# Test signal handling (manual - requires second terminal)
-uv run slm run -- bash -c 'echo "Starting..."; sleep 30; echo "Done"'
-# Then in another terminal: kill -TSTP <pid>, kill -CONT <pid>, kill -TERM <pid>
-```
-
-### Usage Examples
-```bash
-# Submit job with notification
-uv run slm submit job_script.sh
-
-# Run command with monitoring
-uv run slm run -- python script.py
-
-# Run bash script with monitoring
-uv run slm run -- bash script.sh
-
-# Run inline bash with monitoring
-uv run slm run -- bash <<'EOF'
-set -e
-python step1.py
-python step2.py
+/public/home/jwli/python3/bin/python3 step1.py
+/public/home/jwli/python3/bin/python3 step2.py
 EOF
 ```
 
@@ -116,10 +103,10 @@ Since compute nodes cannot directly access the database, you must run the HTTP A
 
 ```bash
 # Start API service (default port: 9008)
-uv run slm-api --host 0.0.0.0 --port 9008
+./slm-api --host 0.0.0.0 --port 9008
 
 # Or use a different port
-uv run slm-api --host 0.0.0.0 --port 8000
+./slm-api --host 0.0.0.0 --port 8000
 
 # Set custom API URL (if different from default)
 export SLM_API_URL="http://10.11.100.251:9008"
@@ -147,7 +134,7 @@ Both webhook and database are optional - the tool will work without them (with r
 
 ```bash
 # Disable database logging for a single run
-uv run slm --no-db run -- python script.py
+./slm --no-db run -- python script.py
 ```
 
 ## Integration Patterns
@@ -156,16 +143,16 @@ The key design principle is **zero-pollution wrapping** - original scripts remai
 
 ### Pattern 1: Direct Command
 ```bash
-uv run slm run -- python train.py --epochs 100
+./slm run -- python train.py --epochs 100
 ```
 
 ### Pattern 2: Inline Bash (for multi-step jobs)
 ```bash
-uv run slm run -- bash <<'EOF'
+./slm run -- bash <<'EOF'
 set -e
-python download.py
-python process.py
-python upload.py
+/public/home/jwli/python3/bin/python3 download.py
+/public/home/jwli/python3/bin/python3 process.py
+/public/home/jwli/python3/bin/python3 upload.py
 EOF
 ```
 
@@ -178,7 +165,7 @@ To add monitoring to existing Slurm scripts, wrap the core logic:
 #SBATCH -J my_script
 #SBATCH -c 4
 
-python process.py
+/public/home/jwli/python3/bin/python3 process.py
 ./analyze.sh
 ```
 
@@ -190,8 +177,8 @@ python process.py
 #SBATCH -o logs/%j.out    # Use dedicated logs/ directory
 #SBATCH -e logs/%j.err
 
-uv run /path/to/slurm-admin/src/slurm_admin/slm.py run -- bash <<'EOF'
-python process.py
+/path/to/slurm-admin/slm run -- bash <<'EOF'
+/public/home/jwli/python3/bin/python3 process.py
 ./analyze.sh
 EOF
 ```
@@ -297,7 +284,7 @@ with db.connection.cursor() as cursor:
 close_database()
 EOF
 
-uv run python /tmp/query_job.py
+/public/home/jwli/python3/bin/python3 /tmp/query_job.py
 ```
 
 **Method 2: Access Compute Node Files** (if using /tmp)

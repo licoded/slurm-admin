@@ -19,7 +19,7 @@ nano .env  # or your preferred editor
 3. Load environment variables before running SLM:
 ```bash
 source .env
-uv run slm submit job.sh
+./slm submit job.sh
 ```
 
 ### Environment Variables

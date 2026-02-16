@@ -83,12 +83,12 @@ Original shell scripts remain unchanged - just wrap with `slm run`
 
 ### Pattern 1: Direct Command
 ```bash
-uv run slm.py run -- python my_script.py
+./slm run -- /public/home/jwli/python3/bin/python3 my_script.py
 ```
 
 ### Pattern 2: Inline Bash
 ```bash
-uv run slm.py run -- bash <<'EOF'
+./slm run -- bash <<'EOF'
 # Your complex logic here
 EOF
 ```
@@ -99,7 +99,7 @@ EOF
 #SBATCH -J myjob
 #SBATCH -c 4
 
-uv run slm.py run -- python main.py
+./slm run -- /public/home/jwli/python3/bin/python3 main.py
 ```
 
 ## Configuration
@@ -111,7 +111,7 @@ export SLM_WEBHOOK="https://your-webhook-url.com"
 
 ### Command-Line Arguments
 ```bash
-uv run slm.py --webhook "https://..." run -- command
+./slm --webhook "https://..." run -- command
 ```
 
 ## Dependencies
@@ -122,14 +122,9 @@ uv run slm.py --webhook "https://..." run -- command
 
 ## Installation
 
-### Using uv (Recommended)
+### Installation
 ```bash
-uv sync
-```
-
-### Using pip
-```bash
-pip install -r requirements.txt
+/public/home/jwli/python3/bin/python3 -m pip install -r requirements.txt
 ```
 
 ## Usage Examples
@@ -140,22 +135,22 @@ pip install -r requirements.txt
 sbatch examples/simple_job.sh
 
 # With SUBMITTED notification
-uv run slm.py submit examples/simple_job.sh
+./slm submit examples/simple_job.sh
 ```
 
 ### Run with monitoring
 ```bash
 # Simple command
-uv run slm.py run -- python script.py
+./slm run -- /public/home/jwli/python3/bin/python3 script.py
 
 # With arguments
-uv run slm.py run -- python train.py --epochs 100 --batch-size 32
+./slm run -- /public/home/jwli/python3/bin/python3 train.py --epochs 100 --batch-size 32
 
 # Bash script
-uv run slm.py run -- bash my_script.sh
+./slm run -- bash my_script.sh
 
 # Inline bash
-uv run slm.py run -- bash <<'EOF'
+./slm run -- bash <<'EOF'
 set -e
 python step1.py
 python step2.py
@@ -220,6 +215,6 @@ Extend event types and emoji mappings in `send_webhook()` method.
 - Verify signal sent to correct job ID
 
 ### Command not found
-- Use absolute path to `slm.py`
+- Use absolute path to `slm` script
 - Or add project directory to PATH
-- Or use `uv run slm.py` from project root
+- Or use `./slm` from project root

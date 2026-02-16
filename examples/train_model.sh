@@ -24,7 +24,7 @@ echo "========================================"
 # conda activate myenv
 
 # Wrap the training command with slm run
-uv run slm run -- bash <<'EOF'
+/public/home/jwli/workSpace/yongkang26/26Feb-labs/slurm-admin/slm run -- bash <<'EOF'
 
 set -e
 

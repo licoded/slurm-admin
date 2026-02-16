@@ -28,7 +28,7 @@ echo "CPUs: $SLURM_CPUS_PER_TASK"
 echo "========================================"
 
 # --- KEY: Wrap the core logic with slm run ---
-uv run slm run -- bash <<'EOF'
+/public/home/jwli/workSpace/yongkang26/26Feb-labs/slurm-admin/slm run -- bash <<'EOF'
 
 set -e
 

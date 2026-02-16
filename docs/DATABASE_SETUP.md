@@ -13,7 +13,7 @@ This guide explains how to set up and use the MySQL database for tracking Slurm 
 ### 1. Install Dependencies
 
 ```bash
-uv sync
+/public/home/jwli/python3/bin/python3 -m pip install -r requirements.txt
 ```
 
 This will install `pymysql` for database connectivity.
@@ -63,10 +63,10 @@ You can override these by:
 
 ```bash
 # Test with slm query command
-uv run slm query
+./slm query
 
 # Or use the query script
-uv run python scripts/query_jobs.py --recent
+/public/home/jwli/python3/bin/python3 scripts/query_jobs.py --recent
 ```
 
 ## 📊 Database Schema
@@ -125,14 +125,14 @@ Database logging is **enabled by default**. All lifecycle events are automatical
 
 ```bash
 # Submit job (automatically records to database)
-uv run slm submit job_script.sh
+./slm submit job_script.sh
 
 # Run command (automatically records events)
-uv run slm run -- python train.py
+./slm run -- /public/home/jwli/python3/bin/python3 train.py
 
 # Query job information
-uv run slm query <job_id>
-uv run slm query --events
+./slm query <job_id>
+./slm query --events
 ```
 
 ### Disable Database Logging
@@ -140,7 +140,7 @@ uv run slm query --events
 If you want to disable database logging for a specific command:
 
 ```bash
-uv run slm --no-db run -- python script.py
+./slm --no-db run -- /public/home/jwli/python3/bin/python3 script.py
 ```
 
 ### Using Different Database Credentials
@@ -153,7 +153,7 @@ export SLM_DB_USER="root"
 export SLM_DB_PASSWORD="secret"
 export SLM_DB_NAME="my_slurm_db"
 
-uv run slm run -- python script.py
+./slm run -- python script.py
 ```
 
 ## 📈 Query Examples
@@ -162,19 +162,19 @@ uv run slm run -- python script.py
 
 ```bash
 # Show recent jobs
-uv run python scripts/query_jobs.py --recent 20
+/public/home/jwli/python3/bin/python3 scripts/query_jobs.py --recent 20
 
 # Show specific job details
-uv run python scripts/query_jobs.py --job-id 12345
+/public/home/jwli/python3/bin/python3 scripts/query_jobs.py --job-id 12345
 
 # Show running jobs
-uv run python scripts/query_jobs.py --status RUNNING
+/public/home/jwli/python3/bin/python3 scripts/query_jobs.py --status RUNNING
 
 # Show failed jobs
-uv run python scripts/query_jobs.py --status FAILED
+/public/home/jwli/python3/bin/python3 scripts/query_jobs.py --status FAILED
 
 # Show statistics
-uv run python scripts/query_jobs.py --stats
+/public/home/jwli/python3/bin/python3 scripts/query_jobs.py --stats
 ```
 
 ### Direct SQL Queries
@@ -229,16 +229,16 @@ ORDER BY hours DESC;
 
 ```bash
 # Check recent entries
-uv run python scripts/query_jobs.py --recent 5
+/public/home/jwli/python3/bin/python3 scripts/query_jobs.py --recent 5
 
 # Check if your job was recorded
-uv run slm query $SLURM_JOB_ID
+./slm query $SLURM_JOB_ID
 ```
 
 ### View All Events for a Job
 
 ```bash
-uv run slm query --events
+./slm query --events
 ```
 
 Or via SQL:

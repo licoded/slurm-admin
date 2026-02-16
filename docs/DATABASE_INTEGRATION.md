@@ -52,36 +52,36 @@ SLM_DB_NAME="slurm_admin"
 
 ```bash
 # 1. 运行命令（自动记录到数据库）
-uv run slm run -- python train.py --epochs 100
+./slm run -- /public/home/jwli/python3/bin/python3 train.py --epochs 100
 
 # 2. 查询作业信息
-uv run slm query <job_id>
+./slm query <job_id>
 
 # 3. 查询事件历史
-uv run slm query --events
+./slm query --events
 ```
 
 ### 查询脚本
 
 ```bash
 # 查看最近的作业
-uv run python scripts/query_jobs.py --recent 20
+/public/home/jwli/python3/bin/python3 scripts/query_jobs.py --recent 20
 
 # 查看特定作业详情
-uv run python scripts/query_jobs.py --job-id 12345
+/public/home/jwli/python3/bin/python3 scripts/query_jobs.py --job-id 12345
 
 # 按状态查询
-uv run python scripts/query_jobs.py --status FAILED
+/public/home/jwli/python3/bin/python3 scripts/query_jobs.py --status FAILED
 
 # 查看统计信息
-uv run python scripts/query_jobs.py --stats
+/public/home/jwli/python3/bin/python3 scripts/query_jobs.py --stats
 ```
 
 ### 禁用数据库
 
 ```bash
 # 临时禁用数据库记录
-uv run slm --no-db run -- python script.py
+./slm --no-db run -- /public/home/jwli/python3/bin/python3 script.py
 ```
 
 ## 🔧 已创建的文件
@@ -132,7 +132,7 @@ export SLM_DB_NAME="my_slurm_db"
 
 ```bash
 # 测试1：本地命令执行
-$ uv run slm run -- echo "test"
+$ ./slm run -- echo "test"
 [SLM.DB] Connected to MySQL at licoded.site:3306
 [SLM.DB] Tables verified/created
 [SLM.DB] Database logging enabled
@@ -140,7 +140,7 @@ test
 [SLM] Starting command: echo test
 
 # 测试2：查询记录
-$ uv run python scripts/query_jobs.py --recent 5
+$ /public/home/jwli/python3/bin/python3 scripts/query_jobs.py --recent 5
 Recent 5 Jobs:
 --------------------------------------------------------------------------------
 Job ID          | Name                      | Status       | Submitted
