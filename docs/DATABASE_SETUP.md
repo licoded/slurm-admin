@@ -63,10 +63,10 @@ You can override these by:
 
 ```bash
 # Test with slm query command
-uv run slm.py query
+uv run src/slurm_admin/slm.py query
 
 # Or use the query script
-uv run python scripts/query_jobs.py --recent
+uv run python scripts/scripts/query_jobs.py --recent
 ```
 
 ## 📊 Database Schema
@@ -125,14 +125,14 @@ Database logging is **enabled by default**. All lifecycle events are automatical
 
 ```bash
 # Submit job (automatically records to database)
-uv run slm.py submit job_script.sh
+uv run src/slurm_admin/slm.py submit job_script.sh
 
 # Run command (automatically records events)
-uv run slm.py run -- python train.py
+uv run src/slurm_admin/slm.py run -- python train.py
 
 # Query job information
-uv run slm.py query <job_id>
-uv run slm.py query --events
+uv run src/slurm_admin/slm.py query <job_id>
+uv run src/slurm_admin/slm.py query --events
 ```
 
 ### Disable Database Logging
@@ -140,7 +140,7 @@ uv run slm.py query --events
 If you want to disable database logging for a specific command:
 
 ```bash
-uv run slm.py --no-db run -- python script.py
+uv run src/slurm_admin/slm.py --no-db run -- python script.py
 ```
 
 ### Using Different Database Credentials
@@ -148,7 +148,7 @@ uv run slm.py --no-db run -- python script.py
 Override default credentials via CLI:
 
 ```bash
-uv run slm.py --db-host localhost --db-user root --db-password secret run -- python script.py
+uv run src/slurm_admin/slm.py --db-host localhost --db-user root --db-password secret run -- python script.py
 ```
 
 Or via environment variables:
@@ -159,7 +159,7 @@ export SLM_DB_USER="root"
 export SLM_DB_PASSWORD="secret"
 export SLM_DB_NAME="my_slurm_db"
 
-uv run slm.py run -- python script.py
+uv run src/slurm_admin/slm.py run -- python script.py
 ```
 
 ## 📈 Query Examples
@@ -168,19 +168,19 @@ uv run slm.py run -- python script.py
 
 ```bash
 # Show recent jobs
-uv run python scripts/query_jobs.py --recent 20
+uv run python scripts/scripts/query_jobs.py --recent 20
 
 # Show specific job details
-uv run python scripts/query_jobs.py --job-id 12345
+uv run python scripts/scripts/query_jobs.py --job-id 12345
 
 # Show running jobs
-uv run python scripts/query_jobs.py --status RUNNING
+uv run python scripts/scripts/query_jobs.py --status RUNNING
 
 # Show failed jobs
-uv run python scripts/query_jobs.py --status FAILED
+uv run python scripts/scripts/query_jobs.py --status FAILED
 
 # Show statistics
-uv run python scripts/query_jobs.py --stats
+uv run python scripts/scripts/query_jobs.py --stats
 ```
 
 ### Direct SQL Queries
@@ -235,16 +235,16 @@ ORDER BY hours DESC;
 
 ```bash
 # Check recent entries
-uv run python scripts/query_jobs.py --recent 5
+uv run python scripts/scripts/query_jobs.py --recent 5
 
 # Check if your job was recorded
-uv run slm.py query $SLURM_JOB_ID
+uv run src/slurm_admin/slm.py query $SLURM_JOB_ID
 ```
 
 ### View All Events for a Job
 
 ```bash
-uv run slm.py query --events
+uv run src/slurm_admin/slm.py query --events
 ```
 
 Or via SQL:

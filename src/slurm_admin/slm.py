@@ -13,26 +13,20 @@ from datetime import datetime
 from typing import Optional, List, Dict, Any
 
 try:
-    import requests
+    from .database import get_database, close_database
 except ImportError:
-    requests = None
-    print("[SLM] Warning: 'requests' module not found. Webhooks will be disabled.", file=sys.stderr)
-
-try:
-    from database import get_database, close_database, DatabaseConfig
-except ImportError:
-    print("[SLM] Warning: 'database' module not found. Database logging will be disabled.", file=sys.stderr)
-    get_database = None
-    close_database = None
-    DatabaseConfig = None
+    try:
+        from database import get_database, close_database
+    except ImportError:
+        print("[SLM] Warning: 'database' module not found. Database logging will be disabled.", file=sys.stderr)
+        get_database = None
+        close_database = None
 
 
 class SlmSDK:
     """Slurm Lifecycle Monitor SDK"""
 
-    def __init__(self, webhook: Optional[str] = None, db_enabled: bool = True):
-        # Priority: CLI argument > Environment variable > Default
-        self.webhook = webhook or os.getenv("SLM_WEBHOOK", "")
+    def __init__(self, db_enabled: bool = True):
         self.job_id = os.getenv('SLURM_JOB_ID', 'N/A')
         self.job_name = os.getenv('SLURM_JOB_NAME', 'LocalTask')
         self.job_nodes = os.getenv('SLURM_JOB_NODELIST', 'N/A')
@@ -56,59 +50,11 @@ class SlmSDK:
         if self.db:
             self.db.update_job_status(self.job_id, status, **kwargs)
 
-    def send_webhook(self, status: str, details: str = ""):
-        """Send webhook notification and log to database"""
+    def log_status(self, status: str, details: str = ""):
+        """Log status to database"""
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-        # Log to database
         self._log_event("lifecycle", status, details, {"timestamp": now})
-
-        # Send webhook if configured
-        if not self.webhook:
-            print(f"[SLM] No webhook configured. Status: {status}", file=sys.stderr)
-            return
-
-        if not requests:
-            print(f"[SLM] Requests module not available. Status: {status}", file=sys.stderr)
-            return
-
-        # Build emoji map for different statuses
-        emoji_map = {
-            "SUBMITTED": "📤",
-            "RUNNING": "▶️",
-            "PAUSED": "⏸️",
-            "RESUMED": "▶️",
-            "TERMINATING": "⏹️",
-            "COMPLETED": "✅",
-            "FAILED": "❌"
-        }
-
-        emoji = emoji_map.get(status, "📊")
-
-        payload = {
-            "msg_type": "text",
-            "content": {
-                "text": (
-                    f"{emoji} [Slurm {status}]\n"
-                    f"🆔 JobID: {self.job_id}\n"
-                    f"📝 Name: {self.job_name}\n"
-                    f"🖥️ Nodes: {self.job_nodes}\n"
-                    f"⚙️ CPUs: {self.job_cpus}\n"
-                    f"🎮 GPUs: {self.job_gpus}\n"
-                    f"💾 Memory: {self.job_mem}\n"
-                    f"🔀 Partition: {self.job_partition}\n"
-                    f"⏰ Time: {now}\n"
-                    f"ℹ️ Details: {details}"
-                )
-            }
-        }
-
-        try:
-            response = requests.post(self.webhook, json=payload, timeout=5)
-            if response.status_code != 200:
-                print(f"[SLM] Webhook returned status {response.status_code}", file=sys.stderr)
-        except Exception as e:
-            print(f"[SLM] Webhook failed: {e}", file=sys.stderr)
+        print(f"[SLM] {status}: {details}", file=sys.stderr)
 
     def register_job(self, script_path: str = None, command: str = None):
         """Register job in database"""
@@ -137,7 +83,7 @@ class SlmSDK:
         # Register job and update status to RUNNING
         self.register_job(command=cmd_str)
         self._update_job_status("RUNNING", command=cmd_str)
-        self.send_webhook("RUNNING", f"Command: {cmd_str}")
+        self.log_status("RUNNING", f"Command: {cmd_str}")
 
         # Signal handling
         signal_received = {"signal": None}
@@ -152,11 +98,11 @@ class SlmSDK:
             status = sig_map.get(signum, f"SIGNAL_{signum}")
             signal_name = signal.Signals(signum).name
 
-            # Only send webhook for first occurrence of each signal type
+            # Only log for first occurrence of each signal type
             if signal_received["signal"] != status:
                 signal_received["signal"] = status
                 self._update_job_status(status)
-                self.send_webhook(status, f"Received signal: {signal_name}")
+                self.log_status(status, f"Received signal: {signal_name}")
 
                 if status == "TERMINATING":
                     print(f"[SLM] Received {signal_name}, terminating...", file=sys.stderr)
@@ -184,7 +130,7 @@ class SlmSDK:
                 details = f"Exit code: {exit_code}"
 
             self._update_job_status(final_status, exit_code=exit_code)
-            self.send_webhook(final_status, details)
+            self.log_status(final_status, details)
 
             # Close database connection before exit
             if self.db:
@@ -197,7 +143,7 @@ class SlmSDK:
             print(f"[SLM] {error_msg}", file=sys.stderr)
 
             self._update_job_status("FAILED")
-            self.send_webhook("FAILED", error_msg)
+            self.log_status("FAILED", error_msg)
 
             if self.db:
                 close_database()
@@ -213,23 +159,17 @@ def main():
         epilog="""
 Examples:
   # Submit a job script
-  slm submit job_script.sh
+  uv run slm submit job_script.sh
 
   # Run a command with monitoring
-  slm run -- python train.py --epochs 100
+  uv run slm run -- python train.py --epochs 100
 
-  # Run with environment variable for webhook
-  export SLM_WEBHOOK="https://your-webhook-url.com"
-  slm run -- bash my_script.sh
+  # Query job information
+  uv run slm query
 
   # Disable database logging
-  slm --no-db run -- python script.py
+  uv run slm --no-db run -- python script.py
         """
-    )
-
-    parser.add_argument(
-        '--webhook',
-        help='Webhook URL (overrides SLM_WEBHOOK env var)'
     )
 
     parser.add_argument(
@@ -283,7 +223,7 @@ Examples:
         help='The command to execute (use -- to separate from slm args)'
     )
 
-    # Query subcommand - new!
+    # Query subcommand
     query_parser = subparsers.add_parser('query', help='Query job information from database')
     query_parser.add_argument('job_id', nargs='?', help='Job ID to query (default: current job)')
     query_parser.add_argument(
@@ -307,7 +247,7 @@ Examples:
         os.environ['SLM_DB_NAME'] = args.db_name
 
     # Initialize SDK
-    sdk = SlmSDK(webhook=args.webhook, db_enabled=not args.no_db)
+    sdk = SlmSDK(db_enabled=not args.no_db)
 
     if args.command == 'submit':
         # Submit with notification
@@ -319,7 +259,7 @@ Examples:
         script_path = os.path.abspath(args.script)
         sdk.register_job(script_path=script_path)
         sdk._update_job_status("SUBMITTED", script_path=script_path)
-        sdk.send_webhook("SUBMITTED", f"Script: {args.script}")
+        sdk.log_status("SUBMITTED", f"Script: {args.script}")
 
         sbatch_cmd = ['sbatch']
         if args.sbatch_args:
@@ -331,7 +271,7 @@ Examples:
 
         if result.returncode != 0:
             sdk._update_job_status("FAILED")
-            sdk.send_webhook("FAILED", f"sbatch failed with code {result.returncode}")
+            sdk.log_status("FAILED", f"sbatch failed with code {result.returncode}")
 
         sys.exit(result.returncode)
 

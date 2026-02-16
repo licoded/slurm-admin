@@ -21,10 +21,10 @@ source ~/.bashrc
 
 ```bash
 # Test basic command
-uv run slm.py run -- echo "Test successful!"
+uv run src/slurm_admin/slm.py run -- echo "Test successful!"
 
 # Test with Python
-uv run slm.py run -- python -c "print('Python test!')"
+uv run src/slurm_admin/slm.py run -- python -c "print('Python test!')"
 ```
 
 ## 3. Create your first monitored job
@@ -44,7 +44,7 @@ echo "Starting job..."
 echo "Job ID: $SLURM_JOB_ID"
 
 # Wrap your command with slm run
-uv run /path/to/slurm-admin/slm.py run -- python -c "
+uv run /path/to/slurm-admin/src/slurm_admin/slm.py run -- python -c "
 import time
 print('Processing...')
 time.sleep(10)
@@ -63,7 +63,7 @@ chmod +x my_first_job.sh
 sbatch my_first_job.sh
 
 # Option 2: Use slm submit (with SUBMITTED notification)
-uv run /path/to/slurm-admin/slm.py submit my_first_job.sh
+uv run /path/to/slurm-admin/src/slurm_admin/slm.py submit my_first_job.sh
 ```
 
 ### Step 3: Monitor the job
@@ -87,7 +87,7 @@ cat > long_job.sh <<'EOF'
 #SBATCH -c 1
 #SBATCH --time=01:00:00
 
-uv run /path/to/slurm-admin/slm.py run -- bash -c '
+uv run /path/to/slurm-admin/src/slurm_admin/slm.py run -- bash -c '
 echo "Starting long job..."
 for i in {1..60}; do
     echo "Step $i/60"
@@ -137,7 +137,7 @@ python process.py
 #SBATCH -c 4
 
 # Add this wrapper
-uv run /path/to/slurm-admin/slm.py run -- bash <<'EOF'
+uv run /path/to/slurm-admin/src/slurm_admin/slm.py run -- bash <<'EOF'
 
 # Your existing logic (unchanged)
 python process.py
@@ -161,7 +161,7 @@ That's it! Your script now has full lifecycle monitoring.
 source ~/.bashrc
 conda activate myenv
 
-uv run /path/to/slurm-admin/slm.py run -- python train.py --epochs 100
+uv run /path/to/slurm-admin/src/slurm_admin/slm.py run -- python train.py --epochs 100
 ```
 
 ### Pattern 2: Data processing pipeline
@@ -170,7 +170,7 @@ uv run /path/to/slurm-admin/slm.py run -- python train.py --epochs 100
 #SBATCH -J process_data
 #SBATCH -c 8
 
-uv run /path/to/slurm-admin/slm.py run -- bash <<'EOF'
+uv run /path/to/slurm-admin/src/slurm_admin/slm.py run -- bash <<'EOF'
 set -e  # Exit on error
 
 python download.py
@@ -188,7 +188,7 @@ EOF
 #SBATCH --gres=gpu:1
 #SBATCH --array=0-99
 
-uv run /path/to/slurm-admin/slm.py run -- python inference.py \
+uv run /path/to/slurm-admin/src/slurm_admin/slm.py run -- python inference.py \
     --input batch_$SLURM_ARRAY_TASK_ID \
     --output result_$SLURM_ARRAY_TASK_ID
 ```
@@ -219,7 +219,7 @@ curl -X POST $SLM_WEBHOOK -H "Content-Type: application/json" \
 ## 8. Next steps
 
 - Check `examples/` directory for more examples
-- Customize webhook format in `slm.py` for your needs
+- Customize webhook format in `src/slurm_admin/slm.py` for your needs
 - Add SLM to all your critical Slurm jobs
 - Set up webhook to send to your team's chat channel
 
@@ -227,16 +227,16 @@ curl -X POST $SLM_WEBHOOK -H "Content-Type: application/json" \
 
 ```bash
 # Submit job with notification
-uv run slm.py submit script.sh
+uv run src/slurm_admin/slm.py submit script.sh
 
 # Run command with monitoring
-uv run slm.py run -- python script.py
+uv run src/slurm_admin/slm.py run -- python script.py
 
 # Run bash script with monitoring
-uv run slm.py run -- bash script.sh
+uv run src/slurm_admin/slm.py run -- bash script.sh
 
 # Run inline bash with monitoring
-uv run slm.py run -- bash <<'EOF'
+uv run src/slurm_admin/slm.py run -- bash <<'EOF'
 # Your commands here
 EOF
 

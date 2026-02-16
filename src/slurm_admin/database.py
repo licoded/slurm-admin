@@ -22,10 +22,10 @@ class DatabaseConfig:
     """Database configuration from environment variables"""
 
     def __init__(self):
-        self.host = os.getenv("SLM_DB_HOST", "licoded.site")
+        self.host = os.getenv("SLM_DB_HOST", "your_mysql_host")
         self.port = int(os.getenv("SLM_DB_PORT", "3306"))
         self.user = os.getenv("SLM_DB_USER", "slurm_admin_rw")
-        self.password = os.getenv("SLM_DB_PASSWORD", "Slurm@Admin2026#RW")
+        self.password = os.getenv("SLM_DB_PASSWORD", "your_secure_password")
         self.database = os.getenv("SLM_DB_NAME", "slurm_admin")
         self.charset = "utf8mb4"
 

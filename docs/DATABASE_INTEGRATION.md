@@ -4,7 +4,7 @@
 
 ### 1. 数据库连接和初始化
 
-已创建 `database.py` 模块，提供：
+已创建 `src/slurm_admin/database.py` 模块，提供：
 - **DatabaseConfig**: 从环境变量读取数据库配置
 - **SlurmDatabase**: 数据库管理类，负责连接、表创建、数据操作
 - **自动表创建**: 首次连接时自动创建必要的表结构
@@ -27,7 +27,7 @@
 
 ### 3. 集成到 SLM CLI
 
-`slm.py` 现在支持：
+`src/slurm_admin/slm.py` 现在支持：
 - ✅ **自动数据库记录**：所有生命周期事件自动记录到数据库
 - ✅ **slm submit**：提交作业时记录 SUBMITTED 状态
 - ✅ **slm run**：监控运行时记录所有事件（RUNNING, PAUSED, RESUMED, COMPLETED, FAILED）
@@ -52,45 +52,45 @@ SLM_DB_NAME="slurm_admin"
 
 ```bash
 # 1. 运行命令（自动记录到数据库）
-uv run slm.py run -- python train.py --epochs 100
+uv run src/slurm_admin/slm.py run -- python train.py --epochs 100
 
 # 2. 查询作业信息
-uv run slm.py query <job_id>
+uv run src/slurm_admin/slm.py query <job_id>
 
 # 3. 查询事件历史
-uv run slm.py query --events
+uv run src/slurm_admin/slm.py query --events
 ```
 
 ### 查询脚本
 
 ```bash
 # 查看最近的作业
-uv run python scripts/query_jobs.py --recent 20
+uv run python scripts/scripts/query_jobs.py --recent 20
 
 # 查看特定作业详情
-uv run python scripts/query_jobs.py --job-id 12345
+uv run python scripts/scripts/query_jobs.py --job-id 12345
 
 # 按状态查询
-uv run python scripts/query_jobs.py --status FAILED
+uv run python scripts/scripts/query_jobs.py --status FAILED
 
 # 查看统计信息
-uv run python scripts/query_jobs.py --stats
+uv run python scripts/scripts/query_jobs.py --stats
 ```
 
 ### 禁用数据库
 
 ```bash
 # 临时禁用数据库记录
-uv run slm.py --no-db run -- python script.py
+uv run src/slurm_admin/slm.py --no-db run -- python script.py
 ```
 
 ## 🔧 已创建的文件
 
-1. **database.py** - 数据库模块（连接、表创建、CRUD操作）
+1. **src/slurm_admin/database.py** - 数据库模块（连接、表创建、CRUD操作）
 2. **sql/init_schema.sql** - 数据库初始化脚本
-3. **scripts/query_jobs.py** - 查询脚本（支持多种查询方式）
+3. **scripts/scripts/query_jobs.py** - 查询脚本（支持多种查询方式）
 4. **DATABASE_SETUP.md** - 数据库设置指南
-5. 更新 **slm.py** - 集成数据库功能
+5. 更新 **src/slurm_admin/slm.py** - 集成数据库功能
 6. 更新 **.env.example** - 添加数据库配置
 7. 更新 **requirements.txt** 和 **pyproject.toml** - 添加 pymysql 依赖
 
@@ -128,7 +128,7 @@ uv run slm.py --no-db run -- python script.py
 
 ```bash
 # 测试1：本地命令执行
-$ uv run slm.py run -- echo "test"
+$ uv run src/slurm_admin/slm.py run -- echo "test"
 [SLM.DB] Connected to MySQL at licoded.site:3306
 [SLM.DB] Tables verified/created
 [SLM.DB] Database logging enabled
@@ -136,7 +136,7 @@ test
 [SLM] Starting command: echo test
 
 # 测试2：查询记录
-$ uv run python scripts/query_jobs.py --recent 5
+$ uv run python scripts/scripts/query_jobs.py --recent 5
 Recent 5 Jobs:
 --------------------------------------------------------------------------------
 Job ID          | Name                      | Status       | Submitted

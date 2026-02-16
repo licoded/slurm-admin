@@ -18,21 +18,21 @@ echo ""
 
 # Check if dependencies are installed
 echo "Checking dependencies..."
-if uv run python -c "import requests" 2>/dev/null; then
-    echo "✅ requests module is installed"
+if uv run python -c "import pymysql" 2>/dev/null; then
+    echo "✅ pymysql module is installed"
 else
-    echo "⚠️  requests module not found. Run 'uv sync' to install."
+    echo "⚠️  pymysql module not found. Run 'uv sync' to install."
 fi
 echo ""
 
 # Test 1: Basic command execution
 echo "Test 1: Basic command execution"
-uv run slm.py run -- echo "Hello from SLM!"
+uv run slm run -- echo "Hello from SLM!"
 echo ""
 
 # Test 2: Python script
 echo "Test 2: Python script execution"
-uv run slm.py run -- python -c "
+uv run slm run -- python -c "
 import sys
 print('Python version:', sys.version_info.major)
 print('Test passed!')
@@ -41,7 +41,7 @@ echo ""
 
 # Test 3: Command with arguments
 echo "Test 3: Command with multiple arguments"
-uv run slm.py run -- bash -c "
+uv run slm run -- bash -c "
 echo 'Line 1'
 echo 'Line 2'
 echo 'Line 3'
@@ -50,7 +50,7 @@ echo ""
 
 # Test 4: Error handling
 echo "Test 4: Error handling (should show FAILED)"
-uv run slm.py run -- python -c "import sys; sys.exit(1)"
+uv run slm run -- python -c "import sys; sys.exit(1)"
 echo ""
 
 # Test 5: Long-running command (interrupt with Ctrl+C to test signal)
@@ -59,7 +59,7 @@ echo "Starting 30-second job... (Press Ctrl+C to test SIGINT handling)"
 echo "Note: This test requires manual intervention"
 echo ""
 read -p "Press Enter to start, or Ctrl+C to skip..."
-uv run slm.py run -- bash -c "
+uv run slm run -- bash -c "
 for i in {1..30}; do
     echo \"Progress: \$i/30\"
     sleep 1

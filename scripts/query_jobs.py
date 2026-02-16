@@ -9,11 +9,13 @@ import os
 import argparse
 from datetime import datetime, timedelta
 
-# Add parent directory to path to import database module
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add src directory to path to import database module
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+src_path = os.path.join(project_root, 'src')
+sys.path.insert(0, src_path)
 
 try:
-    from database import get_database, close_database, DatabaseConfig
+    from slurm_admin.database import get_database, close_database, DatabaseConfig
 except ImportError as e:
     print(f"Error: Could not import database module: {e}", file=sys.stderr)
     sys.exit(1)

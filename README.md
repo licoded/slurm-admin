@@ -30,7 +30,7 @@ Two-layer decoupled design:
 uv sync
 
 # Make slm.py executable
-chmod +x slm.py
+chmod +x slm
 ```
 
 **Note**: For systems with OpenSSL 1.0.2 (common in older HPC environments), the project automatically uses `urllib3<2.0` for compatibility.
