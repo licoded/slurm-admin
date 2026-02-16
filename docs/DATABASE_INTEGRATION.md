@@ -52,36 +52,36 @@ SLM_DB_NAME="slurm_admin"
 
 ```bash
 # 1. 运行命令（自动记录到数据库）
-uv run src/slurm_admin/slm.py run -- python train.py --epochs 100
+uv run slm run -- python train.py --epochs 100
 
 # 2. 查询作业信息
-uv run src/slurm_admin/slm.py query <job_id>
+uv run slm query <job_id>
 
 # 3. 查询事件历史
-uv run src/slurm_admin/slm.py query --events
+uv run slm query --events
 ```
 
 ### 查询脚本
 
 ```bash
 # 查看最近的作业
-uv run python scripts/scripts/query_jobs.py --recent 20
+uv run python scripts/query_jobs.py --recent 20
 
 # 查看特定作业详情
-uv run python scripts/scripts/query_jobs.py --job-id 12345
+uv run python scripts/query_jobs.py --job-id 12345
 
 # 按状态查询
-uv run python scripts/scripts/query_jobs.py --status FAILED
+uv run python scripts/query_jobs.py --status FAILED
 
 # 查看统计信息
-uv run python scripts/scripts/query_jobs.py --stats
+uv run python scripts/query_jobs.py --stats
 ```
 
 ### 禁用数据库
 
 ```bash
 # 临时禁用数据库记录
-uv run src/slurm_admin/slm.py --no-db run -- python script.py
+uv run slm --no-db run -- python script.py
 ```
 
 ## 🔧 已创建的文件
@@ -113,10 +113,14 @@ uv run src/slurm_admin/slm.py --no-db run -- python script.py
 - `scancel <job_id>` → 记录 TERMINATING
 
 ### 3. 灵活配置
-三种配置方式（优先级从高到低）：
-1. CLI 参数：`slm --db-host localhost ...`
-2. 环境变量：`export SLM_DB_HOST="localhost"`
-3. 默认值：在代码中定义
+通过环境变量配置数据库连接：
+```bash
+export SLM_DB_HOST="localhost"
+export SLM_DB_PORT="3306"
+export SLM_DB_USER="root"
+export SLM_DB_PASSWORD="secret"
+export SLM_DB_NAME="my_slurm_db"
+```
 
 ### 4. 查询能力
 - 查询单个作业详情
@@ -128,7 +132,7 @@ uv run src/slurm_admin/slm.py --no-db run -- python script.py
 
 ```bash
 # 测试1：本地命令执行
-$ uv run src/slurm_admin/slm.py run -- echo "test"
+$ uv run slm run -- echo "test"
 [SLM.DB] Connected to MySQL at licoded.site:3306
 [SLM.DB] Tables verified/created
 [SLM.DB] Database logging enabled
@@ -136,7 +140,7 @@ test
 [SLM] Starting command: echo test
 
 # 测试2：查询记录
-$ uv run python scripts/scripts/query_jobs.py --recent 5
+$ uv run python scripts/query_jobs.py --recent 5
 Recent 5 Jobs:
 --------------------------------------------------------------------------------
 Job ID          | Name                      | Status       | Submitted

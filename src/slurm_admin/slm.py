@@ -169,6 +169,13 @@ Examples:
 
   # Disable database logging
   uv run slm --no-db run -- python script.py
+
+Environment Variables:
+  SLM_DB_HOST       Database host (default: licoded.site)
+  SLM_DB_PORT       Database port (default: 3306)
+  SLM_DB_USER       Database user (default: slurm_admin_rw)
+  SLM_DB_PASSWORD   Database password (default: Slurm@Admin2026#RW)
+  SLM_DB_NAME       Database name (default: slurm_admin)
         """
     )
 
@@ -176,32 +183,6 @@ Examples:
         '--no-db',
         action='store_true',
         help='Disable database logging'
-    )
-
-    parser.add_argument(
-        '--db-host',
-        help='Database host (overrides SLM_DB_HOST env var)'
-    )
-
-    parser.add_argument(
-        '--db-port',
-        type=int,
-        help='Database port (overrides SLM_DB_PORT env var)'
-    )
-
-    parser.add_argument(
-        '--db-user',
-        help='Database user (overrides SLM_DB_USER env var)'
-    )
-
-    parser.add_argument(
-        '--db-password',
-        help='Database password (overrides SLM_DB_PASSWORD env var)'
-    )
-
-    parser.add_argument(
-        '--db-name',
-        help='Database name (overrides SLM_DB_NAME env var)'
     )
 
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
@@ -233,18 +214,6 @@ Examples:
     )
 
     args = parser.parse_args()
-
-    # Set database environment variables from CLI args if provided
-    if args.db_host:
-        os.environ['SLM_DB_HOST'] = args.db_host
-    if args.db_port:
-        os.environ['SLM_DB_PORT'] = str(args.db_port)
-    if args.db_user:
-        os.environ['SLM_DB_USER'] = args.db_user
-    if args.db_password:
-        os.environ['SLM_DB_PASSWORD'] = args.db_password
-    if args.db_name:
-        os.environ['SLM_DB_NAME'] = args.db_name
 
     # Initialize SDK
     sdk = SlmSDK(db_enabled=not args.no_db)

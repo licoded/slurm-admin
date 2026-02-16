@@ -21,10 +21,10 @@ source ~/.bashrc
 
 ```bash
 # Test basic command
-uv run src/slurm_admin/slm.py run -- echo "Test successful!"
+uv run slm run -- echo "Test successful!"
 
 # Test with Python
-uv run src/slurm_admin/slm.py run -- python -c "print('Python test!')"
+uv run slm run -- python -c "print('Python test!')"
 ```
 
 ## 3. Create your first monitored job
@@ -227,16 +227,16 @@ curl -X POST $SLM_WEBHOOK -H "Content-Type: application/json" \
 
 ```bash
 # Submit job with notification
-uv run src/slurm_admin/slm.py submit script.sh
+uv run slm submit script.sh
 
 # Run command with monitoring
-uv run src/slurm_admin/slm.py run -- python script.py
+uv run slm run -- python script.py
 
 # Run bash script with monitoring
-uv run src/slurm_admin/slm.py run -- bash script.sh
+uv run slm run -- bash script.sh
 
 # Run inline bash with monitoring
-uv run src/slurm_admin/slm.py run -- bash <<'EOF'
+uv run slm run -- bash <<'EOF'
 # Your commands here
 EOF
 
