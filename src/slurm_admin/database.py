@@ -202,8 +202,7 @@ class SlurmDatabase:
 
                 if status in status_time_map:
                     timestamp_field = status_time_map[status]
-                    update_fields.append(f"{timestamp_field} = %s")
-                    update_values.append(datetime.now())
+                    update_fields.append(f"{timestamp_field} = NOW()")
 
                 for key, value in kwargs.items():
                     if value is not None:
