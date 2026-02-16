@@ -101,11 +101,13 @@ class SlurmDatabase:
                         completed_at DATETIME,
                         status VARCHAR(32),
                         exit_code INT,
+                        submission_source VARCHAR(32),
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                         INDEX idx_job_id (job_id),
                         INDEX idx_status (status),
-                        INDEX idx_submitted_at (submitted_at)
+                        INDEX idx_submitted_at (submitted_at),
+                        INDEX idx_submission_source (submission_source)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """)
 
@@ -133,7 +135,7 @@ class SlurmDatabase:
             print(f"[SLM.DB] Failed to create tables: {e}", file=sys.stderr)
             raise
 
-    def register_job(self, job_id: str, job_name: str, **kwargs) -> Optional[int]:
+    def register_job(self, job_id: str, job_name: str, submission_source: str = None, **kwargs) -> Optional[int]:
         """Register a new job in the database"""
         if not self.enabled or not self.connection:
             return None
@@ -159,7 +161,11 @@ class SlurmDatabase:
                 else:
                     # Insert new job
                     columns = ['job_id', 'job_name'] + [k for k, v in kwargs.items() if v is not None]
+                    if submission_source is not None:
+                        columns.append('submission_source')
                     values = [job_id, job_name] + [v for k, v in kwargs.items() if v is not None]
+                    if submission_source is not None:
+                        values.append(submission_source)
                     placeholders = ', '.join(['%s'] * len(columns))
 
                     insert_query = f"""
@@ -209,7 +215,8 @@ class SlurmDatabase:
 
                 cursor.execute(update_query, update_values)
                 self.connection.commit()
-                return True
+                # Return True if a record was actually updated
+                return cursor.rowcount > 0
 
         except Exception as e:
             print(f"[SLM.DB] Failed to update job status: {e}", file=sys.stderr)

@@ -9,6 +9,8 @@ import sys
 import signal
 import subprocess
 import argparse
+import re
+from uuid import uuid4
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 
@@ -56,7 +58,7 @@ class SlmSDK:
         self._log_event("lifecycle", status, details, {"timestamp": now})
         print(f"[SLM] {status}: {details}", file=sys.stderr)
 
-    def register_job(self, script_path: str = None, command: str = None):
+    def register_job(self, script_path: str = None, command: str = None, submission_source: str = None):
         """Register job in database"""
         if self.db:
             job_data = {
@@ -69,7 +71,7 @@ class SlmSDK:
                 'partition_name': self.job_partition,
                 'status': 'SUBMITTED'
             }
-            self.db.register_job(self.job_id, self.job_name, **job_data)
+            self.db.register_job(self.job_id, self.job_name, submission_source=submission_source, **job_data)
 
     def monitor_run(self, cmd_args: List[str]):
         """Core monitoring logic: wrap and execute the actual command"""
@@ -80,9 +82,29 @@ class SlmSDK:
         cmd_str = ' '.join(cmd_args)
         print(f"[SLM] Starting command: {cmd_str}")
 
-        # Register job and update status to RUNNING
-        self.register_job(command=cmd_str)
-        self._update_job_status("RUNNING", command=cmd_str)
+        # Determine job_id based on execution environment (Approach A: Explicit)
+        slurm_job_id = os.getenv('SLURM_JOB_ID')
+
+        if slurm_job_id:
+            # Scenario 1 & 2: Slurm environment
+            self.job_id = f"slurm-{slurm_job_id}"
+
+            # Try to update existing record (Scenario 1: user used slm submit)
+            updated = self._update_job_status("RUNNING", command=cmd_str)
+
+            if not updated:
+                # Scenario 2: No record found (user used sbatch directly)
+                print("[SLM] No submission record found, creating new entry (direct_sbatch)", file=sys.stderr)
+                self.register_job(command=cmd_str, submission_source='direct_sbatch')
+                self._update_job_status("RUNNING", command=cmd_str)
+            # else: Scenario 1: Record found and updated
+        else:
+            # Scenario 3: Local test environment
+            self.job_id = f"raw-{uuid4()}"
+            print(f"[SLM] Local test mode, job_id: {self.job_id}", file=sys.stderr)
+            self.register_job(command=cmd_str, submission_source='local_test')
+            self._update_job_status("RUNNING", command=cmd_str)
+
         self.log_status("RUNNING", f"Command: {cmd_str}")
 
         # Signal handling
@@ -224,25 +246,41 @@ Environment Variables:
             print(f"[SLM] Error: Script not found: {args.script}", file=sys.stderr)
             sys.exit(1)
 
-        # Register job in database
         script_path = os.path.abspath(args.script)
-        sdk.register_job(script_path=script_path)
-        sdk._update_job_status("SUBMITTED", script_path=script_path)
-        sdk.log_status("SUBMITTED", f"Script: {args.script}")
-
         sbatch_cmd = ['sbatch']
         if args.sbatch_args:
             sbatch_cmd.extend(args.sbatch_args.split())
         sbatch_cmd.append(args.script)
 
         print(f"[SLM] Submitting job: {args.script}")
-        result = subprocess.run(sbatch_cmd)
+
+        # Run sbatch and capture output to get the real job_id
+        result = subprocess.run(sbatch_cmd, capture_output=True, text=True)
 
         if result.returncode != 0:
-            sdk._update_job_status("FAILED")
-            sdk.log_status("FAILED", f"sbatch failed with code {result.returncode}")
+            print(f"[SLM] sbatch failed: {result.stderr}", file=sys.stderr)
+            sys.exit(result.returncode)
 
-        sys.exit(result.returncode)
+        # Parse sbatch output to extract real job_id
+        # Output format: "Submitted batch job 12345"
+        match = re.search(r'Submitted batch job (\d+)', result.stdout)
+        if not match:
+            print(f"[SLM] Failed to parse sbatch output: {result.stdout}", file=sys.stderr)
+            sys.exit(1)
+
+        real_job_id = match.group(1)
+        db_job_id = f"slurm-{real_job_id}"
+
+        # Update sdk's job_id to the real one
+        sdk.job_id = db_job_id
+
+        # Register job in database with real job_id
+        sdk.register_job(script_path=script_path, submission_source='slm_submit')
+        sdk._update_job_status("SUBMITTED", script_path=script_path)
+        sdk.log_status("SUBMITTED", f"Script: {args.script}, Job ID: {real_job_id}")
+
+        print(f"[SLM] Job submitted successfully: {real_job_id}")
+        sys.exit(0)
 
     elif args.command == 'run':
         # Handle command execution
